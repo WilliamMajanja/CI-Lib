@@ -106,6 +106,5 @@ def label_encode(y):
         1-D integer array of shape ``(n_samples,)``.
     """
     y = np.asarray(y)
-    classes = np.unique(y)
-    class_to_idx = {c: i for i, c in enumerate(classes)}
-    return np.array([int(class_to_idx[label]) for label in y], dtype=np.intp)
+    classes, inverse = np.unique(y, return_inverse=True)
+    return inverse.astype(np.intp)

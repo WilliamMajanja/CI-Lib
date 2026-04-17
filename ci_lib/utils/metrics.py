@@ -94,6 +94,12 @@ def r_squared(y_true, y_pred):
     -------
     float
         R² score.  1.0 indicates a perfect fit.
+
+    Notes
+    -----
+    When the total sum of squares is zero (constant *y_true*), the function
+    returns 1.0 if predictions are perfect and 0.0 otherwise, following the
+    scikit-learn convention.
     """
     y_true = np.asarray(y_true, dtype=np.float64)
     y_pred = np.asarray(y_pred, dtype=np.float64)
