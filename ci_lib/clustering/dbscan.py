@@ -175,4 +175,3 @@ class DBSCAN:
                     labels[nb] = cluster_id
                     if core_mask[nb]:
                         queue.append(nb)
-        return
