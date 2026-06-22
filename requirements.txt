@@ -1,0 +1,5 @@
+# Core dependency
+numpy>=1.21
+
+# For users who want the CLI only
+# pip install -e .

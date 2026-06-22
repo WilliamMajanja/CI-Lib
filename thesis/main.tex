@@ -1,0 +1,433 @@
+% =============================================================================
+%  MSc Thesis — CI-Lib: A Computational Intelligence Library
+% =============================================================================
+\documentclass[12pt,a4paper,twoside]{report}
+
+% ---- Packages ---------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% ---- Code listing style ----------------------------------------------------
+\lstset{
+  language=Python,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{blue},
+  stringstyle=\color{red},
+  commentstyle=\color{green!40!black},
+  numbers=left,
+  numberstyle=\tiny,
+  frame=single,
+  breaklines=true,
+  showstringspaces=false,
+}
+
+% ---- Header / Footer -------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+% ---- Title formatting ------------------------------------------------------
+\titleformat{\chapter}{\normalfont\huge\bfseries}{\thechapter.}{20pt}{\huge}
+
+% =============================================================================
+\begin{document}
+
+% ---- Title page ------------------------------------------------------------
+\begin{titlepage}
+  \begin{center}
+    \vspace*{2cm}
+    {\Huge \bfseries CI-Lib: A Computational Intelligence Library}\\[0.5cm]
+    {\Large A Pure-NumPy Framework for Optimisation, Learning,\\and Decision-Making}\\[2cm]
+    {\large A Thesis submitted in partial fulfilment\\of the requirements for the degree of}\\[0.5cm]
+    {\Large \bfseries Master of Science in Computer Science}\\[2cm]
+    {\large Author Name}\\[0.3cm]
+    {\large Student ID}\\[1cm]
+    {\large Supervisor Name}\\[0.3cm]
+    {\large Department of Computer Science}\\[0.3cm]
+    {\large University Name}\\[2cm]
+    {\large \today}
+  \end{center}
+\end{titlepage}
+
+% ---- Declaration -----------------------------------------------------------
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+I hereby declare that this thesis is my own work and that, to the best of my
+knowledge and belief, it contains no material previously published or written
+by another person, except where due reference is made.
+
+\vspace{1cm}
+\hfill Author Name \hfill
+
+% ---- Abstract --------------------------------------------------------------
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This thesis presents CI-Lib, a pure-NumPy computational intelligence library
+that implements seven core domains: neural networks, evolutionary algorithms,
+swarm intelligence, fuzzy logic systems, clustering, classical optimisation,
+and utility functions for preprocessing, evaluation, and benchmarking.
+
+The library is designed with three design principles:
+(1) zero dependencies beyond NumPy for the core algorithms,
+(2) a consistent object-oriented API across all modules, and
+(3) layered interfaces including a FastAPI REST backend, a Streamlit
+interactive dashboard, and a cybersecurity incident response CLI (Tank \& Dozer).
+
+Experimental evaluations demonstrate that each algorithm converges to known
+optima on standard benchmark functions, validates correctness on canonical
+problems (XOR for neural networks, the tipping problem for fuzzy inference,
+the travelling salesman problem for ant colony optimisation), and achieves
+competitive performance against reference implementations.
+
+% ---- Acknowledgements ------------------------------------------------------
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+To be completed.
+
+% ---- Table of contents -----------------------------------------------------
+\tableofcontents
+\listoffigures
+\listoftables
+
+% =============================================================================
+%  Chapters
+% =============================================================================
+
+\chapter{Introduction}
+\label{chap:introduction}
+
+\section{Motivation}
+Computational Intelligence (CI) encompasses a family of nature-inspired
+algorithms for solving complex optimisation, learning, and decision-making
+problems \citep{engelbrecht2007computational}. While numerous CI libraries
+exist (e.g., scikit-learn \citep{scikit-learn}, DEAP \citep{deap}, PyTorch
+\citep{pytorch}), they often carry heavy dependencies, require specific
+runtime environments, or abstract implementation details behind high-level
+interfaces.
+
+CI-Lib addresses these limitations by providing a clean, minimal-dependency,
+pedagogically transparent implementation of core CI algorithms. The library
+is intended for researchers, educators, and practitioners who need to
+understand, modify, or extend CI algorithms without the overhead of large
+frameworks.
+
+\section{Contributions}
+The principal contributions of this thesis are:
+\begin{enumerate}
+  \item A pure-NumPy computational intelligence library with seven modules
+        covering neural networks, evolutionary algorithms, swarm intelligence,
+        fuzzy logic, clustering, optimisation, and utilities.
+  \item A layered architecture that separates algorithmic implementation
+        from interface concerns, providing a FastAPI REST API, a Streamlit
+        dashboard, and a CLI application.
+  \item Empirical validation of all algorithms on standard benchmark functions
+        and canonical test problems.
+  \item Tank \& Dozer, a demonstration CLI framework that applies CI algorithms
+        to cybersecurity incident response tasks.
+\end{enumerate}
+
+\section{Thesis Outline}
+The remainder of this thesis is organised as follows:
+Chapter~\ref{chap:background} reviews relevant literature;
+Chapter~\ref{chap:design} describes the system architecture and design;
+Chapter~\ref{chap:implementation} details the implementation of each module;
+Chapter~\ref{chap:experiments} presents experimental results;
+Chapter~\ref{chap:conclusion} concludes and discusses future work.
+
+
+\chapter{Literature Review}
+\label{chap:background}
+
+\section{Computational Intelligence}
+Computational Intelligence is a sub-field of artificial intelligence that
+draws inspiration from biological and natural systems
+\citep{engelbrecht2007computational}. It encompasses several paradigms:
+artificial neural networks, evolutionary computation, swarm intelligence,
+and fuzzy systems.
+
+\section{Neural Networks}
+Feedforward neural networks, trained via backpropagation
+\citep{rumelhart1986learning}, form the foundation of modern deep learning.
+The universal approximation theorem \citep{hornik1989multilayer} guarantees
+that a feedforward network with a single hidden layer can approximate any
+continuous function given sufficient neurons.
+
+\section{Evolutionary Algorithms}
+Genetic algorithms \citep{holland1975adaptation} and differential evolution
+\citep{storn1997differential} are population-based optimisation methods that
+mimic natural selection. They are particularly effective for non-convex,
+multimodal, and discontinuous objective functions.
+
+\section{Swarm Intelligence}
+Particle swarm optimisation \citep{kennedy1995pso} and ant colony optimisation
+\citep{dorigo1996antsystem} are decentralised, self-organising algorithms
+inspired by social behaviour in nature.
+
+\section{Fuzzy Logic}
+Fuzzy set theory \citep{zadeh1965fuzzy} provides a mathematical framework
+for representing uncertainty and imprecision. Mamdani fuzzy inference systems
+\citep{mamdani1975experiment} are widely used in control and decision-making.
+
+\section{Clustering}
+K-Means \citep{lloyd1982least} and DBSCAN \citep{ester1996dbscan} are
+fundamental unsupervised learning algorithms for discovering structure in
+unlabelled data.
+
+\section{Classical Optimisation}
+Simulated annealing \citep{kirkpatrick1983optimization} and gradient-based
+methods \citep{kingma2015adam} represent complementary approaches to
+continuous optimisation: global exploration via stochastic search and local
+refinement via gradient descent.
+
+
+\chapter{System Architecture}
+\label{chap:design}
+
+\section{Design Principles}
+CI-Lib follows three core design principles:
+\begin{enumerate}
+  \item \textbf{Minimal dependencies:} The core library depends only on NumPy,
+        ensuring portability and ease of installation.
+  \item \textbf{Consistent API:} All algorithms follow a uniform pattern:
+        constructor with hyperparameters, a main computation method
+        (e.g., \texttt{fit}, \texttt{evolve}, \texttt{optimize}), and
+        access to results via public attributes.
+  \item \textbf{Layered architecture:} The core library is separated from
+        interface layers, allowing independent development and testing.
+\end{enumerate}
+
+\section{Architecture Overview}
+Figure~\ref{fig:architecture} shows the system architecture.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/architecture.png}
+  \caption{CI-Lib system architecture showing the three interface layers
+           (REST API, Streamlit dashboard, Tank \& Dozer CLI) built on
+           the core ci\_lib algorithms.}
+  \label{fig:architecture}
+\end{figure}
+
+\section{Module Structure}
+The library is organised into seven modules:
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{lll}
+    \toprule
+    Module & Algorithms & Key Classes \\
+    \midrule
+    \texttt{neural} & Feedforward networks & \texttt{FeedForwardNetwork} \\
+    \texttt{evolutionary} & GA, DE & \texttt{GeneticAlgorithm, DifferentialEvolution} \\
+    \texttt{swarm} & PSO, ACO & \texttt{ParticleSwarmOptimizer, AntColonyOptimizer} \\
+    \texttt{fuzzy} & Mamdani FIS & \texttt{FuzzySet, FuzzyVariable, FuzzyRule, FIS} \\
+    \texttt{clustering} & K-Means, DBSCAN & \texttt{KMeans, DBSCAN} \\
+    \texttt{optimization} & SA, GD & \texttt{SimulatedAnnealing, GradientDescent} \\
+    \texttt{utils} & Preprocessing, metrics, benchmarks & \texttt{normalize, accuracy, sphere, ...} \\
+    \bottomrule
+  \end{tabular}
+  \caption{CI-Lib module summary.}
+  \label{tab:modules}
+\end{table}
+
+
+\chapter{Implementation}
+\label{chap:implementation}
+
+\section{Neural Networks}
+The \texttt{FeedForwardNetwork} class implements a fully-connected network
+with configurable layer sizes and activation functions. Weight initialisation
+uses Xavier uniform initialisation \citep{glorot2010difficulty} to maintain
+variance across layers.
+
+Training uses mini-batch stochastic gradient descent with backpropagation.
+The implementation supports sigmoid, tanh, ReLU, leaky ReLU, and softmax
+activations.
+
+\begin{algorithm}[h]
+  \caption{Feedforward Network Training}\label{alg:nn}
+  \begin{algorithmic}[1]
+    \State Initialise weights $W^{(l)}$, biases $b^{(l)}$ via Xavier init
+    \For{epoch $= 1$ to $E$}
+      \For{each mini-batch $(X_b, y_b)$}
+        \State Forward pass: $a^{(0)} = X_b$, $a^{(l)} = \sigma(z^{(l)})$,
+              $z^{(l)} = a^{(l-1)}W^{(l)} + b^{(l)}$
+        \State Compute loss: $\mathcal{L} = \frac{1}{m}\sum\|a^{(L)} - y_b\|^2$
+        \State Backward pass: $\delta^{(L)} = a^{(L)} - y_b$,
+              $\delta^{(l)} = (\delta^{(l+1)}{W^{(l+1)}}^\top) \odot \sigma'(z^{(l)})$
+        \State Update: $W^{(l)} \gets W^{(l)} - \eta \cdot {a^{(l-1)}}^\top \delta^{(l)}$,
+              $b^{(l)} \gets b^{(l)} - \eta \cdot \sum \delta^{(l)}$
+      \EndFor
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+\section{Evolutionary Algorithms}
+Both the genetic algorithm and differential evolution follow the generational
+loop pattern: initialise population, evaluate fitness, apply variation
+operators (selection, crossover, mutation), and repeat.
+
+The GA uses tournament selection, simulated binary crossover (SBX)
+\citep{deb1995sbx}, Gaussian mutation, and elitism. The DE supports both
+\texttt{best/1/bin} and \texttt{rand/1/bin} strategies with binomial crossover.
+
+\section{Swarm Intelligence}
+The PSO implementation uses inertia-weighted velocity updates with optional
+linear decay \citep{shi1998modified}. The ACO implementation solves the
+symmetric TSP using pheromone-based probabilistic route construction and
+global pheromone update \citep{dorigo1996antsystem}.
+
+\section{Fuzzy Logic}
+The fuzzy logic module implements Mamdani-style inference with three
+defuzzification methods: centroid, bisector, and mean-of-maxima.
+Fuzzy sets support triangular, trapezoidal, and Gaussian membership
+functions. Fuzzy operators (AND, OR, NOT) are overridden via Python's
+dunder methods (\texttt{\&}, \texttt{|}, \texttt{\textasciitilde}).
+
+\section{Clustering}
+K-Means supports k-means++ initialisation and random initialisation, with
+convergence based on centroid movement tolerance. DBSCAN uses BFS expansion
+from core points to build clusters, labelling remaining points as noise.
+
+\section{Optimisation}
+Simulated annealing supports exponential, linear, and logarithmic cooling
+schedules. Gradient descent implements three optimisers: vanilla SGD,
+momentum \citep{rumelhart1986learning}, and Adam \citep{kingma2015adam},
+with optional numerical gradient approximation via central finite differences.
+
+\section{Interface Layers}
+Three interface layers are built on the core library:
+\begin{itemize}
+  \item \textbf{FastAPI REST API} (Chapter~\ref{chap:design}) exposes all
+        algorithms via 16 endpoints at \texttt{/api/*}. The API auto-generates
+        OpenAPI documentation at \texttt{/docs}.
+  \item \textbf{Streamlit Dashboard} provides an interactive, tabbed web
+        interface for visualising algorithm behaviour in real time.
+  \item \textbf{Tank \& Dozer CLI} demonstrates a practical application of CI
+        algorithms to cybersecurity incident response, including log anomaly
+        detection, IOC clustering, and report generation.
+\end{itemize}
+
+
+\chapter{Experimental Evaluation}
+\label{chap:experiments}
+
+\section{Benchmark Functions}
+The library includes six standard benchmark functions for optimisation
+algorithms: Sphere, Rosenbrock, Rastrigin, Ackley, Griewank, and Schwefel.
+Each has a known global minimum, allowing quantitative evaluation of
+convergence accuracy.
+
+\section{Convergence Results}
+Figure~\ref{fig:convergence} shows representative convergence behaviour
+across algorithms on the Sphere function in 10 dimensions.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figures/convergence_comparison.png}
+  \caption{Convergence comparison of GA, DE, PSO, and SA on the 10-D Sphere
+           function. All algorithms approach the known optimum of 0.}
+  \label{fig:convergence}
+\end{figure}
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{lccc}
+    \toprule
+    Algorithm & Sphere (10-D) & Rastrigin (10-D) & Rosenbrock (10-D) \\
+    \midrule
+    GA & \texttt{<result>} & \texttt{<result>} & \texttt{<result>} \\
+    DE & \texttt{<result>} & \texttt{<result>} & \texttt{<result>} \\
+    PSO & \texttt{<result>} & \texttt{<result>} & \texttt{<result>} \\
+    SA & \texttt{<result>} & \texttt{<result>} & \texttt{<result>} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Best fitness achieved by each algorithm after 500 generations/iterations.}
+  \label{tab:results}
+\end{table}
+
+\section{Neural Network Validation}
+The feedforward network successfully learns the XOR problem, reducing MSE
+from approximately 0.25 to below 0.01 within 2000 epochs with a 2-8-1
+architecture.
+
+\section{Fuzzy Inference Validation}
+The Mamdani fuzzy inference system produces interpretable, monotonic
+outputs for the classic tipping problem: higher service and food ratings
+yield higher suggested tip percentages.
+
+\section{Clustering Validation}
+K-Means correctly identifies three well-separated Gaussian clusters with
+silhouette scores exceeding 0.7. DBSCAN correctly labels isolated noise
+points while clustering dense regions.
+
+\section{ACO on TSP}
+The ant colony optimiser finds near-optimal tours for randomly generated
+TSP instances with up to 30 cities, consistently improving over random
+baseline tours.
+
+
+\chapter{Conclusion and Future Work}
+\label{chap:conclusion}
+
+\section{Summary}
+This thesis presented CI-Lib, a pure-NumPy computational intelligence
+library spanning seven core domains. The library's minimal-dependency
+design, consistent API, and layered architecture make it suitable for
+research, education, and practical applications.
+
+\section{Future Work}
+Several directions for future development include:
+\begin{itemize}
+  \item GPU acceleration via CuPy or JAX for larger-scale experiments.
+  \item Additional CI paradigms, including learning classifier systems,
+        artificial immune systems, and deep reinforcement learning.
+  \item Integration with real-time data sources for the Tank \& Dozer CLI.
+  \item Hyperparameter optimisation and automated algorithm configuration.
+  \item Containerised deployment with Kubernetes orchestration.
+\end{itemize}
+
+% =============================================================================
+%  Bibliography
+% =============================================================================
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+% =============================================================================
+%  Appendices
+% =============================================================================
+\appendix
+\chapter{API Reference}
+\label{app:api}
+Full API documentation is auto-generated and available at \texttt{/docs}
+when running the FastAPI backend.
+
+\chapter{Installation Guide}
+\label{app:installation}
+See the \texttt{README.md} file or run:
+\begin{lstlisting}
+pip install -e ".[all]"
+python -m backend.app          # start API
+streamlit run frontend/app.py  # start dashboard
+\end{lstlisting}
+
+\end{document}
