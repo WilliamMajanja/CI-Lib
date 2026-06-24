@@ -157,6 +157,28 @@ docker compose up --build -d
 # Frontend: http://localhost:8501
 ```
 
+## Local Development (without Docker)
+
+For environments without Docker (e.g., Raspberry Pi), use a virtual environment:
+
+```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install all dependencies (core + web + dev)
+pip install -e ".[dev]"
+pip install fastapi uvicorn pydantic streamlit matplotlib
+
+# Run backend (Terminal 1)
+python -m backend.app
+# API: http://localhost:8000 | Docs: http://localhost:8000/docs
+
+# Run frontend (Terminal 2)
+streamlit run frontend/app.py --server.port=8501
+# Dashboard: http://localhost:8501
+```
+
 ## Running Experiments
 
 Generate convergence comparison figures for the thesis:
