@@ -18,6 +18,11 @@ rpy2_robjects = None
 rpy2_pandas = None
 r_interface = None
 
+_home = os.path.expanduser("~")
+_r_libs = os.environ.get("R_LIBS_USER") or os.path.join(_home, "R", "library")
+os.environ.setdefault("R_LIBS_USER", _r_libs)
+os.environ.setdefault("R_HOME", "/usr/lib/R")
+
 try:
     import rpy2.robjects as robjects
     from rpy2.robjects import pandas2ri, numpy2ri
@@ -25,22 +30,18 @@ try:
     from rpy2.robjects.packages import importr, isinstalled
     from rpy2.rinterface_lib.callbacks import logger as rpy2_logger
     import logging
-    
+
     rpy2_logger.setLevel(logging.ERROR)
-    
-    pandas2ri.activate()
-    numpy2ri.activate()
-    
-    rpy2_robjects = robjects
-    rpy2_pandas = pandas2ri
-    r_interface = robjects.r
-    
-    base = importr('base')
-    utils = importr('utils')
-    
-    R_AVAILABLE = True
-except ImportError:
-    pass
+
+    # Verify R is actually reachable
+    _test = robjects.r('pi')
+    if float(str(_test[0])) > 3.0:
+        rpy2_robjects = robjects
+        rpy2_pandas = pandas2ri
+        r_interface = robjects.r
+        base = importr('base')
+        utils = importr('utils')
+        R_AVAILABLE = True
 except Exception:
     pass
 
