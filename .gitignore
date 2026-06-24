@@ -50,5 +50,9 @@ tankdozer_report_*.txt
 # Temp files
 /tmp/
 
+# Runtime logs
+*.log
+backend.log
+
 # Generated thesis figures (regenerate via experiment script)
 thesis/figures/*.png

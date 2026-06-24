@@ -31,6 +31,7 @@ from ci_lib.swarm import ParticleSwarmOptimizer, AntColonyOptimizer
 from ci_lib.fuzzy import FuzzyVariable, FuzzySet, FuzzyRule, FuzzyInferenceSystem
 from ci_lib.clustering import KMeans, DBSCAN
 from ci_lib.optimization import SimulatedAnnealing, GradientDescent
+from ci_lib.viz import VisualizationSuite, PythonVisualizationEngine
 
 __all__ = [
     "FeedForwardNetwork",
@@ -46,4 +47,6 @@ __all__ = [
     "DBSCAN",
     "SimulatedAnnealing",
     "GradientDescent",
+    "VisualizationSuite",
+    "PythonVisualizationEngine",
 ]

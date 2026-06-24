@@ -42,8 +42,26 @@ web = [
     "streamlit>=1.35",
     "matplotlib>=3.8",
 ]
+viz = [
+    "plotly>=5.18",
+    "bokeh>=3.3",
+    "altair>=5.2",
+    "seaborn>=0.13",
+    "networkx>=3.2",
+    "pyvis>=0.3",
+    "folium>=0.15",
+    "statsmodels>=0.14",
+    "scipy>=1.11",
+    "pandas>=2.1",
+    "geopandas>=0.14",
+    "pyvista>=0.43",
+    "panel>=1.3",
+]
+r = [
+    "rpy2>=3.5.0",
+]
 all = [
-    "ci-lib[dev,web]",
+    "ci-lib[dev,web,viz,r]",
 ]
 
 [project.urls]

@@ -13,7 +13,8 @@ is designed for **research, education, and practical application** with a
 focus on algorithmic transparency, minimal dependencies, and a consistent API.
 
 The library is accompanied by a **FastAPI REST backend**, an interactive
-**Streamlit dashboard**, and **Tank & Dozer**, a cybersecurity incident
+**Streamlit dashboard**, a **best-in-class visualization suite** (10+ Python
+libraries + 60+ R packages), and **Tank & Dozer**, a cybersecurity incident
 response CLI that demonstrates practical applications of CI algorithms.
 
 ## Table of Contents
@@ -21,12 +22,15 @@ response CLI that demonstrates practical applications of CI algorithms.
 - [Modules](#modules)
 - [Quick Start](#quick-start)
 - [Library Usage](#library-usage)
+- [Visualization Suite](#visualization-suite)
 - [REST API](#rest-api)
 - [Streamlit Dashboard](#streamlit-dashboard)
 - [Tank & Dozer CLI](#tank--dozer-cli)
 - [Docker](#docker)
+- [Local Development](#local-development-without-docker)
 - [Running Experiments](#running-experiments)
 - [Tests](#tests)
+- [R Setup](#r-setup)
 - [Thesis](#thesis)
 - [License](#license)
 - [References](#references)
@@ -42,6 +46,7 @@ response CLI that demonstrates practical applications of CI algorithms.
 | **clustering** | K-Means, DBSCAN | `KMeans`, `DBSCAN` |
 | **optimization** | Simulated annealing, gradient descent | `SimulatedAnnealing`, `GradientDescent` |
 | **utils** | Preprocessing, metrics, benchmarks | `normalize`, `mse`, `sphere`, `rosenbrock`, … |
+| **viz** | Python + R visualization suite | `PythonVisualizationEngine`, `VisualizationSuite` |
 
 ## Quick Start
 
@@ -54,7 +59,13 @@ pip install -e .
 # With web interface (Streamlit dashboard)
 pip install -e ".[web]"
 
-# With all extras (testing, web)
+# With visualization libraries (Plotly, Bokeh, Seaborn, etc.)
+pip install -e ".[viz]"
+
+# With R integration
+pip install -e ".[r]"
+
+# With all extras (dev + web + viz + r)
 pip install -e ".[all]"
 
 # Or via pip from requirements
@@ -86,6 +97,104 @@ y_xor = np.array([[0],[1],[1],[0]])
 nn = FeedForwardNetwork([2, 4, 1], activation="sigmoid", learning_rate=0.5, seed=42)
 nn.fit(X_xor, y_xor, epochs=2000)
 print(f"Final MSE: {nn.score(X_xor, y_xor):.6f}")
+```
+
+## Visualization Suite
+
+A comprehensive visualization engine supporting **10+ Python libraries** and **60+ R packages**.
+
+### Python Visualization Libraries
+
+| Library | Type | Usage |
+|---------|------|-------|
+| **Matplotlib** | Static plots | All basic chart types + 3D |
+| **Seaborn** | Statistical plots | Heatmap, pairplot, violin, KDE |
+| **Plotly** | Interactive plots | Scatter, 3D, sunburst, parallel coords |
+| **Bokeh** | Interactive dashboards | Linked pan/zoom, server-side apps |
+| **Altair** | Declarative viz | Grammar of graphics (Vega-Lite) |
+| **NetworkX** | Graph analysis | Degree dist, communities, layout |
+| **PyVis** | Interactive networks | Force-directed, physics engine |
+| **Statsmodels** | Time series | Decomposition, ACF/PACF, Q-Q |
+| **Folium** | Maps | Leaflet maps, heatmaps, markers |
+| **PyVista** | 3D rendering | Surface, volume, mesh visualization |
+
+### Python Usage
+
+```python
+from ci_lib.viz import PythonVisualizationEngine
+
+viz = PythonVisualizationEngine()
+
+# Matplotlib line plot
+fig = viz.mpl_line({"sin(x)": y1, "cos(x)": y2}, title="Trig", xlabel="x", ylabel="y")
+
+# Correlation heatmap (seaborn)
+fig = viz.mpl_correlation_matrix(df)
+
+# 3D surface
+fig = viz.mpl_3d_surface(X, Y, Z, title="Surface Plot")
+
+# Time series decomposition
+fig = viz.ts_decomposition(series, period=12)
+
+# Network graph
+fig = viz.network_graph(edges, labels)
+
+# Interactive plotly exports
+fig_json = viz.plotly_scatter(x, y, labels)  # returns JSON for Plotly
+```
+
+### R Integration
+
+The `ci_lib.viz.r_bridge` module provides two engines for R visualizations:
+
+1. **RVisualizationEngine** (via `rpy2`) — Call R directly from Python
+2. **RScriptRunner** (via subprocess) — Run R scripts as standalone processes
+
+```python
+from ci_lib.viz.r_bridge import get_r_engine
+
+engine = get_r_engine()
+if engine.available:
+    engine.run_r_script('''
+        library(ggplot2)
+        p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+        ggsave("plot.png", p)
+    ''')
+```
+
+### R Visualization Templates
+
+Pre-built R templates are available in `ci_lib/viz/r_scripts/`:
+- `ggplot_templates.R` — Scatter/density, correlation heatmaps, PCA biplots,
+  time series, boxplots, violin plots, ridge plots, dendrograms, ROC curves
+
+### Streamlit Frontend Tabs
+
+The dashboard includes 14 tabs covering all visualization types:
+
+| Tab | Libraries | Features |
+|-----|-----------|----------|
+| Clustering–Benchmarks | API + matplotlib | CI algorithm demos |
+| **Viz Gallery** | matplotlib, plotly | Demo of all chart types |
+| **Interactive** | plotly, bokeh, altair | 3D scatter, sunburst, parallel coords |
+| **Statistical** | statsmodels, seaborn | TS decomposition, ACF/PACF, Q-Q |
+| **Network** | networkx, pyvis | Graph viz, communities, interactive |
+| **Geospatial** | folium | World maps, heatmaps, markers |
+| **3D Plots** | matplotlib, plotly | Surface, scatter, interactive 3D |
+
+### Shiny Integration
+
+R Shiny apps can be launched from Python:
+
+```python
+from frontend.shiny_integration import ShinyAppBridge
+
+shiny = ShinyAppBridge()
+if shiny.available:
+    url = shiny.launch(app_name="CI-Lib Dashboard", port=3838)
+    print(f"Shiny app at {url}")
+    shiny.stop()
 ```
 
 ## REST API
@@ -166,9 +275,14 @@ For environments without Docker (e.g., Raspberry Pi), use a virtual environment:
 python3 -m venv venv
 source venv/bin/activate
 
-# Install all dependencies (core + web + dev)
-pip install -e ".[dev]"
-pip install fastapi uvicorn pydantic streamlit matplotlib
+# Install all dependencies (core + web + dev + viz)
+pip install -e ".[all]"
+
+# Or step by step:
+pip install -e ".[dev]"          # Core + dev tools
+pip install -e ".[web]"          # FastAPI + Streamlit
+pip install -e ".[viz]"          # All visualization libraries
+pip install rpy2                 # R integration (optional)
 
 # Run backend (Terminal 1)
 python -m backend.app
@@ -177,6 +291,9 @@ python -m backend.app
 # Run frontend (Terminal 2)
 streamlit run frontend/app.py --server.port=8501
 # Dashboard: http://localhost:8501
+
+# Run R setup (Terminal 3, optional)
+Rscript install_r_packages.R
 ```
 
 ## Running Experiments
@@ -190,6 +307,38 @@ python experiments/convergence_comparison.py
 This produces:
 - CSV results in `experiments/results/`
 - PNG figures in `thesis/figures/`
+
+## R Setup
+
+Install R (if not already installed):
+
+```bash
+# Debian/Ubuntu/Raspberry Pi
+sudo apt-get install r-base r-base-dev
+
+# macOS
+brew install r
+
+# Windows: Download from https://cran.r-project.org/
+```
+
+Then install R visualization packages:
+
+```bash
+Rscript install_r_packages.R
+```
+
+Or install individual packages as needed:
+
+```bash
+Rscript -e 'install.packages(c("ggplot2", "plotly", "dplyr"), repos="https://cloud.r-project.org/")'
+```
+
+The Python-R bridge uses `rpy2`:
+
+```bash
+pip install rpy2
+```
 
 ## Tests
 
