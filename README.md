@@ -2,9 +2,10 @@
 
 **A Pure-NumPy Framework for Optimisation, Learning, and Decision-Making**
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)]()
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)]()
 [![NumPy](https://img.shields.io/badge/NumPy-1.21+-orange.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/WilliamMajanja/Partial-Realpart-Analysis-/workflows/CI/badge.svg)](https://github.com/WilliamMajanja/Partial-Realpart-Analysis-/actions)
 
 CI-Lib is a pure-NumPy computational intelligence library spanning seven
 core domains: neural networks, evolutionary algorithms, swarm intelligence,
@@ -13,9 +14,10 @@ is designed for **research, education, and practical application** with a
 focus on algorithmic transparency, minimal dependencies, and a consistent API.
 
 The library is accompanied by a **FastAPI REST backend**, an interactive
-**Streamlit dashboard**, a **best-in-class visualization suite** (10+ Python
-libraries + 60+ R packages), and **Tank & Dozer**, a cybersecurity incident
-response CLI that demonstrates practical applications of CI algorithms.
+**Streamlit dashboard** with a futuristic cyberpunk theme, a **best-in-class
+visualization suite** (10+ Python libraries + 60+ R packages), and
+**Tank & Dozer**, a cybersecurity incident response CLI integrated directly
+into the dashboard.
 
 ## Table of Contents
 
@@ -163,6 +165,17 @@ if engine.available:
     ''')
 ```
 
+### Cyberpunk Theme
+
+The Streamlit frontend features a fully customized cyberpunk aesthetic:
+- Dark gradient background with glowing accent colors (cyan `#00f0ff`, magenta `#ff00ff`)
+- `Orbitron` and `Fira Code` typography throughout
+- Animated shimmer gradients on headings
+- Glass-morphism cards with backdrop blur
+- Terminal-style output panels with pulsing glow effects
+- Themed metric cards, dataframes, tabs, and form controls
+- Two-tone gradient progress bars and danger/action button styles
+
 ### R Visualization Templates
 
 Pre-built R templates are available in `ci_lib/viz/r_scripts/`:
@@ -235,16 +248,28 @@ The API listens on `http://localhost:8000` with auto-generated docs at
 streamlit run frontend/app.py --server.port=8501
 ```
 
-The dashboard provides eight interactive tabs:
+The dashboard provides **15 interactive tabs** in a cyberpunk-themed UI:
 
-1. **Clustering** — K-Means and DBSCAN with 2-D scatter plots
-2. **Evolutionary** — GA and DE with convergence plots
-3. **Swarm** — PSO convergence and ACO TSP tour visualisation
-4. **Fuzzy Inference** — Mamdani tipping problem with live sliders
-5. **Neural Network** — XOR training with prediction table
-6. **Optimization** — SA and GD with convergence tracking
-7. **Utilities** — Data normalisation and metrics computation
-8. **Benchmarks** — Benchmark function evaluation and landscape plots
+| # | Tab | Description |
+|---|-----|-------------|
+| 1 | **Clustering** | K-Means and DBSCAN with 2-D scatter plots |
+| 2 | **Evolutionary** | GA and DE with convergence plots |
+| 3 | **Swarm** | PSO convergence and ACO TSP tour visualisation |
+| 4 | **Fuzzy Inference** | Mamdani tipping problem with live sliders |
+| 5 | **Neural Network** | XOR training with prediction table |
+| 6 | **Optimization** | SA and GD with convergence tracking |
+| 7 | **Utilities** | Data normalisation and metrics computation |
+| 8 | **Benchmarks** | Benchmark function evaluation and landscape plots |
+| 9 | **Viz Gallery** | All chart type demos (matplotlib, plotly) |
+| 10 | **Interactive** | Plotly, Bokeh, Altair 3D/sunburst/parallel coords |
+| 11 | **Statistical** | Statsmodels, seaborn time series / ACF / Q-Q |
+| 12 | **Network** | NetworkX, PyVis graph visualization |
+| 13 | **Geospatial** | Folium world maps, heatmaps, markers |
+| 14 | **3D Plots** | Matplotlib + Plotly 3D surface/scatter |
+| 15 | **Tank & Dozer** | Full IR CLI with command builder & terminal output |
+
+The sidebar includes **quick-action buttons** (IR Init, Status, Quick Scan,
+Report) and **Tank & Dozer** commands auto-navigate to the correct tab.
 
 ## Tank & Dozer CLI
 

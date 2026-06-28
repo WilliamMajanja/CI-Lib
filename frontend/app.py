@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import io
 import json
+import subprocess
 import urllib.request
 import urllib.error
-from typing import Any, Dict, List, Optional, Tuple
-from pathlib import Path
+from typing import Any
 
 import matplotlib
 matplotlib.use('Agg')
@@ -21,17 +20,428 @@ from matplotlib.patches import FancyBboxPatch
 from ci_lib.viz.python_viz import PythonVisualizationEngine, PLOTLY_AVAILABLE
 viz = PythonVisualizationEngine()
 
+# ── Tank & Dozer modules ────────────────────────────────────────────
+from tankdozer import __app_name__, __version__
+
+# ══════════════════════════════════════════════════════════════════════
+# FUTURISTIC CYBERPUNK THEME
+# ══════════════════════════════════════════════════════════════════════
+FUTURISTIC_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Fira+Code:wght@300;400;700&display=swap');
+
+.stApp {
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px;
+}
+
+h1 {
+    background: linear-gradient(90deg, #00f0ff, #ff00ff, #00f0ff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+h2 {
+    color: #00f0ff !important;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+    padding-bottom: 6px;
+}
+
+h3 {
+    color: #ff00ff !important;
+}
+
+.stMarkdown, p, li, span, div {
+    color: #c0c0e0 !important;
+}
+
+/* ── Cards & Containers ─────────────────────────────────── */
+.css-1r6slb0, .css-12oz5g7, .stTabs [data-baseweb="tab-panel"], .css-1offfwp, .css-1v3fvcr {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 240, 255, 0.12);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Tabs ───────────────────────────────────────────────── */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid rgba(0, 240, 255, 0.15);
+}
+
+.stTabs [data-baseweb="tab"] {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 11px !important;
+    letter-spacing: 1px;
+    color: #8888aa !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    transition: all 0.3s ease;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(255, 0, 255, 0.2)) !important;
+    color: #00f0ff !important;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.stButton > button {
+    background: linear-gradient(90deg, #00f0ff, #0088ff) !important;
+    border: none !important;
+    color: #000 !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+}
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.5) !important;
+}
+.stButton > button:active {
+    transform: translateY(0px);
+}
+
+/* Danger button override */
+div[data-testid="stButton"][kind="secondary"] > button {
+    background: linear-gradient(90deg, #ff0044, #ff0088) !important;
+    box-shadow: 0 0 20px rgba(255, 0, 68, 0.3);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.css-1d391kg, .css-1wrcr25, section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0d0d1f 0%, #150626 100%) !important;
+    border-right: 1px solid rgba(0, 240, 255, 0.15);
+}
+
+section[data-testid="stSidebar"] .css-1v3fvcr {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+.sidebar-header {
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(90deg, #00f0ff, #ff00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.sidebar-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00f0ff, #ff00ff, transparent);
+    margin: 12px 0;
+}
+
+/* ── Metric Cards ────────────────────────────────────────── */
+div[data-testid="stMetric"] {
+    background: rgba(0, 240, 255, 0.05);
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    border-radius: 10px;
+    padding: 12px;
+    backdrop-filter: blur(4px);
+}
+
+div[data-testid="stMetric"] > div:first-child {
+    font-family: 'Orbitron', sans-serif !important;
+    color: #ff00ff !important;
+    font-size: 11px !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+div[data-testid="stMetric"] > div:first-child + div {
+    font-family: 'Fira Code', monospace !important;
+    color: #00f0ff !important;
+    font-size: 24px !important;
+    font-weight: 700;
+    text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+}
+
+/* ── Text Input / Select / Slider ────────────────────────── */
+.stTextInput > div > div, .stSelectbox > div > div, .stSlider > div {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(0, 240, 255, 0.2) !important;
+    border-radius: 8px !important;
+    color: #00f0ff !important;
+}
+
+.stTextInput > div > div:focus-within, .stSelectbox > div > div:focus-within {
+    border-color: #ff00ff !important;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.2) !important;
+}
+
+.stSlider label {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 11px !important;
+    color: #8888aa !important;
+}
+
+/* ── Terminal output box ─────────────────────────────────── */
+.terminal-box {
+    background: #0a0a0a;
+    border: 1px solid #00f0ff;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 13px;
+    color: #00f0ff;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.05), 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+.terminal-box::-webkit-scrollbar {
+    width: 6px;
+}
+.terminal-box::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+.terminal-box::-webkit-scrollbar-thumb {
+    background: #00f0ff;
+    border-radius: 3px;
+}
+
+.terminal-prompt::before {
+    content: "❯ ";
+    color: #ff00ff;
+    font-weight: bold;
+}
+
+/* ── Info / Success / Error boxes ────────────────────────── */
+.stAlert {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(0, 240, 255, 0.15) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(4px);
+}
+
+/* ── Dividers ────────────────────────────────────────────── */
+hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00f0ff, #ff00ff, transparent);
+    margin: 20px 0;
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.stProgress > div > div {
+    background: linear-gradient(90deg, #00f0ff, #ff00ff) !important;
+}
+
+/* ── Text area ───────────────────────────────────────────── */
+.stTextArea textarea {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(0, 240, 255, 0.2) !important;
+    color: #00f0ff !important;
+    border-radius: 8px !important;
+    font-family: 'Fira Code', monospace !important;
+}
+
+/* ── Remove plain white background on metric values ─────── */
+div[data-testid="stMetricLabel"] p {
+    color: #ff00ff !important;
+}
+
+/* ── Info callout ────────────────────────────────────────── */
+div.stInfo {
+    background: rgba(0, 240, 255, 0.08) !important;
+    border-left: 3px solid #00f0ff !important;
+}
+
+div.stError {
+    background: rgba(255, 0, 68, 0.1) !important;
+    border-left: 3px solid #ff0044 !important;
+}
+
+div.stSuccess {
+    background: rgba(0, 255, 65, 0.08) !important;
+    border-left: 3px solid #00ff41 !important;
+}
+
+/* ── Expander ────────────────────────────────────────────── */
+.streamlit-expanderHeader {
+    font-family: 'Orbitron', sans-serif !important;
+    color: #00f0ff !important;
+    background: rgba(0, 240, 255, 0.03) !important;
+    border-radius: 8px !important;
+}
+
+/* ── Checkbox ────────────────────────────────────────────── */
+.stCheckbox label {
+    color: #c0c0e0 !important;
+}
+
+/* ── DataFrames ──────────────────────────────────────────── */
+.stDataFrame {
+    background: transparent !important;
+}
+.stDataFrame table {
+    color: #c0c0e0 !important;
+}
+.stDataFrame thead tr th {
+    background: rgba(0, 240, 255, 0.1) !important;
+    color: #00f0ff !important;
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 11px !important;
+}
+.stDataFrame tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* ── Spinner ─────────────────────────────────────────────── */
+.stSpinner {
+    color: #00f0ff !important;
+}
+
+/* ── Number input ────────────────────────────────────────── */
+.stNumberInput input {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(0, 240, 255, 0.2) !important;
+    color: #00f0ff !important;
+    border-radius: 8px !important;
+}
+
+/* ── Pulsing action button for Tank & Dozer ──────────────── */
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); }
+}
+
+.td-run-button > button {
+    animation: pulse-glow 2s ease-in-out infinite;
+    background: linear-gradient(90deg, #ff00ff, #ff0088) !important;
+    font-size: 14px !important;
+    padding: 10px 30px !important;
+}
+
+/* ── Quick action sidebar buttons ────────────────────────── */
+.td-quick-btn > button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    letter-spacing: 1px !important;
+}
+"""
+
+
 # ── Configuration ────────────────────────────────────────────────────
 
-API_BASE = st.sidebar.text_input("API Base URL", value="http://localhost:8000/api")
+st.set_page_config(page_title="CI-Lib Viz Suite", layout="wide")
+
+# Inject futuristic CSS
+st.markdown(f"<style>{FUTURISTIC_CSS}</style>", unsafe_allow_html=True)
+
+# ── Sidebar ─────────────────────────────────────────────────────────
+
+st.sidebar.markdown(
+    '<div class="sidebar-header">⬡ CI-Lib</div>',
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown(
+    '<div style="font-family: Fira Code, monospace; font-size: 11px; color: #8888aa;">'
+    'Computational Intelligence Suite</div>',
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown('<hr class="sidebar-divider">', unsafe_allow_html=True)
+
+API_BASE = st.sidebar.text_input(
+    "API Endpoint", value="http://localhost:8000/api",
+    help="FastAPI backend URL",
+)
 
 LIB_STATUS = viz.list_libraries()
-st.sidebar.info(f"**Viz Libraries:** {', '.join(LIB_STATUS) if LIB_STATUS else 'matplotlib'}")
+st.sidebar.markdown(
+    f'<div style="font-family: Fira Code, monospace; font-size: 11px; color: #8888aa;">'
+    f'Libraries: {", ".join(LIB_STATUS) if LIB_STATUS else "matplotlib"}</div>',
+    unsafe_allow_html=True,
+)
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### Quick Links")
-st.sidebar.markdown("[API Docs](http://localhost:8000/docs)")
-st.sidebar.markdown("[GitHub](https://github.com/WilliamMajanja/CI-Lib)")
+st.sidebar.markdown('<hr class="sidebar-divider">', unsafe_allow_html=True)
+st.sidebar.markdown(
+    '<div style="font-family: Orbitron, sans-serif; font-size: 12px; color: #00f0ff; '
+    'letter-spacing: 2px;">⚡ QUICK ACTIONS</div>',
+    unsafe_allow_html=True,
+)
+
+def _queue_td(module: str, cmd: str, args: str = ""):
+    st.session_state.td_module = module
+    st.session_state.td_cmd = cmd
+    st.session_state.td_args = args
+    st.session_state.td_auto_run = True
+    st.toast(f"Switch to 'Tank & Dozer' tab to run: {module} {cmd}", icon="⚡")
+
+td_col1, td_col2 = st.sidebar.columns(2)
+with td_col1:
+    if st.button("🚀 IR Init", key="side_ir_init", help="tankdozer ir init"):
+        _queue_td("ir", "init", "--severity medium")
+with td_col2:
+    if st.button("📊 Status", key="side_ir_status", help="tankdozer ir status"):
+        _queue_td("ir", "status")
+
+td_col3, td_col4 = st.sidebar.columns(2)
+with td_col3:
+    if st.button("🔍 Quick Scan", key="side_scan", help="tankdozer scan quick"):
+        _queue_td("scan", "quick")
+with td_col4:
+    if st.button("📄 Report", key="side_report", help="tankdozer report generate"):
+        _queue_td("report", "generate")
+
+st.sidebar.markdown('<hr class="sidebar-divider">', unsafe_allow_html=True)
+st.sidebar.markdown(
+    '<div style="font-family: Orbitron, sans-serif; font-size: 11px; color: #8888aa; '
+    'letter-spacing: 1px;">▸ LINKS</div>',
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown(
+    '<a href="http://localhost:8000/docs" target="_blank" '
+    'style="color: #00f0ff; text-decoration: none; font-family: Fira Code, monospace; '
+    'font-size: 12px;">📡 API Docs</a>',
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown(
+    '<a href="https://github.com/WilliamMajanja/CI-Lib" target="_blank" '
+    'style="color: #ff00ff; text-decoration: none; font-family: Fira Code, monospace; '
+    'font-size: 12px;">⌨ GitHub</a>',
+    unsafe_allow_html=True,
+)
+
+# Initialize session state for Tank & Dozer
+if "td_module" not in st.session_state:
+    st.session_state.td_module = "ir"
+    st.session_state.td_cmd = "init"
+    st.session_state.td_args = ""
+    st.session_state.td_output = ""
+    st.session_state.td_auto_run = False
 
 
 def api_call(method: str, path: str, body: dict | None = None) -> Any:
@@ -54,18 +464,48 @@ def api_call(method: str, path: str, body: dict | None = None) -> Any:
         return None
 
 
+def run_tankdozer(module: str, command: str, extra_args: str = "") -> str:
+    """Run a tankdozer CLI command and return its output."""
+    cmd = ["tankdozer", module, command]
+    if extra_args:
+        cmd.extend(extra_args.split())
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        output = result.stdout + result.stderr
+        if result.returncode != 0:
+            output += f"\n[!] Exit code: {result.returncode}"
+        return output
+    except FileNotFoundError:
+        return "[!] tankdozer not found. Run: pip install -e ."
+    except subprocess.TimeoutExpired:
+        return "[!] Command timed out after 30s"
+    except Exception as e:
+        return f"[!] Error: {e}"
+
+
 # ── Page layout ──────────────────────────────────────────────────────
 
-st.set_page_config(page_title="CI-Lib Viz Suite", layout="wide")
-st.title("🧠 CI-Lib Visualization Suite")
+st.markdown(
+    '<h1 style="text-align: center; font-size: 32px; margin-bottom: 4px;">'
+    '⬡ CI-Lib Visualization Suite</h1>',
+    unsafe_allow_html=True,
+)
+st.markdown(
+    '<p style="text-align: center; font-family: Fira Code, monospace; '
+    'color: #8888aa; font-size: 13px; letter-spacing: 3px;">'
+    'COMPUTATIONAL INTELLIGENCE // ADVANCED ANALYTICS // SECURITY OPS</p>',
+    unsafe_allow_html=True,
+)
 st.markdown("---")
 
-tabs = st.tabs([
+tab_names = [
     "Clustering", "Evolutionary", "Swarm", "Fuzzy Inference",
     "Neural Network", "Optimization", "Utilities", "Benchmarks",
     "Viz Gallery", "Interactive", "Statistical", "Network",
-    "Geospatial", "3D Plots",
-])
+    "Geospatial", "3D Plots", "Tank & Dozer",
+]
+
+tabs = st.tabs(tab_names)
 
 # =====================================================================
 # TAB 1 — Clustering
@@ -787,6 +1227,225 @@ with tabs[13]:
                 fig.update_layout(title="3D Surface (Plotly)", template="plotly_white",
                                  scene=dict(xaxis_title="X", yaxis_title="Y", zaxis_title="Z"))
                 st.plotly_chart(fig, use_container_width=True)
+
+
+# =====================================================================
+# TAB 15 — Tank & Dozer CLI
+# =====================================================================
+
+with tabs[14]:
+    st.markdown(
+        '<h2 style="text-align: center; margin-bottom: 0;">⬡ TANK & DOZER</h2>'
+        '<p style="text-align: center; font-family: Fira Code, monospace; color: #8888aa; '
+        'font-size: 12px; letter-spacing: 2px; margin-top: 0;">'
+        'CYBERSECURITY INCIDENT RESPONSE FRAMEWORK</p>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Banner art ──────────────────────────────────────────
+    banner = """
+    ▄▄▄█████▓ ▄▄▄       ███▄    █  ██ ▄█▀ ▓█████▄  ▒█████   ▒█████  ▒███████▒
+    ▓  ██▒ ▓▒▒████▄     ██ ▀█   █  ██▄█▒ ▒██▀ ██▌▒██▒  ██▒▒██▒  ██▒▒ ▒ ▒ ▄▀░
+    ▒ ▓██░ ▒░▒██  ▀█▄  ▓██  ▀█ ██▒▓███▄░ ░██   █▌▒██░  ██▒▒██░  ██▒░ ▒ ▄▀▒░
+    ░ ▓██▓ ░ ░██▄▄▄▄██ ▓██▒  ▐▌██▒▓██ █▄ ░▓█▄   ▌▒██   ██░▒██   ██░  ▄▀▒   ░
+      ▒██▒ ░  ▓█   ▓██▒▒██░   ▓██░▒██▒ █▄░▒████▓ ░ ████▓▒░░ ████▓▒░▒███████▒
+      ▒ ░░    ▒▒   ▓▒█░░ ▒░   ▒ ▒ ▒ ▒▒ ▓▒ ▒▒▓  ▒ ░ ▒░▒░▒░ ░ ▒░▒░▒░ ░▒▒ ▓░▒░▒
+        ░      ▒   ▒▒ ░░ ░░   ░ ▒░░ ░▒ ▒░ ░ ▒  ▒   ░ ▒ ▒░   ░ ▒ ▒░ ░░▒ ▒ ░ ▒
+      ░        ░   ▒      ░   ░ ░ ░ ░░ ░  ░ ░  ░ ░ ░ ░ ▒  ░ ░ ░ ▒  ░ ░ ░ ░ ░
+                   ░  ░         ░ ░  ░      ░        ░ ░      ░ ░      ░ ░
+    """
+    st.markdown(
+        f'<pre style="text-align: center; font-family: Fira Code, monospace; '
+        f'font-size: 10px; color: #00f0ff; line-height: 1.1; '
+        f'background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; '
+        f'border: 1px solid rgba(0,240,255,0.15);">'
+        f'{banner}</pre>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f'<p style="text-align: center; font-family: Orbitron, sans-serif; '
+        f'color: #ff00ff; font-size: 14px; letter-spacing: 3px;">'
+        f'v{__version__} // {__app_name__}</p>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Command Builder ─────────────────────────────────────
+    st.markdown("---")
+    td_col_a, td_col_b = st.columns([1, 2])
+
+    with td_col_a:
+        st.markdown(
+            '<p style="font-family: Orbitron, sans-serif; color: #00f0ff; '
+            'font-size: 14px; letter-spacing: 2px;">▸ COMMAND BUILDER</p>',
+            unsafe_allow_html=True,
+        )
+
+        td_module_configs = {
+            "ir": {
+                "label": "Incident Response",
+                "commands": {
+                    "init": {"args": [{"key": "case_name", "label": "Case Name", "default": "untitled"}, {"key": "severity", "label": "Severity", "type": "select", "options": ["low", "medium", "high", "critical"], "default": "medium"}]},
+                    "status": {"args": []},
+                    "close": {"args": []},
+                },
+            },
+            "analyze": {
+                "label": "Analyze",
+                "commands": {
+                    "logs": {"args": [{"key": "file", "label": "CSV File", "default": "sample.csv"}, {"key": "clusters", "label": "Clusters", "type": "number", "default": "3"}]},
+                    "network": {"args": []},
+                    "traffic": {"args": []},
+                },
+            },
+            "scan": {
+                "label": "Scan",
+                "commands": {
+                    "quick": {"args": []},
+                    "full": {"args": [{"key": "target", "label": "Target", "default": "127.0.0.1"}, {"key": "rate", "label": "Rate", "type": "number", "default": "1000"}]},
+                    "web": {"args": []},
+                },
+            },
+            "ioc": {
+                "label": "IOC Enrichment",
+                "commands": {
+                    "enrich": {"args": [{"key": "indicator", "label": "Indicator", "default": "185.130.5.190"}, {"key": "type", "label": "Type", "type": "select", "options": ["ip", "domain", "hash", "url"], "default": "ip"}]},
+                    "bulk": {"args": []},
+                    "cluster": {"args": [{"key": "file", "label": "CSV File", "default": "iocs.csv"}]},
+                },
+            },
+            "report": {
+                "label": "Report",
+                "commands": {
+                    "generate": {"args": []},
+                    "executive": {"args": []},
+                    "timeline": {"args": []},
+                },
+            },
+        }
+
+        td_module = st.selectbox(
+            "Module",
+            options=list(td_module_configs.keys()),
+            format_func=lambda x: td_module_configs[x]["label"],
+            key="td_module_sel",
+        )
+
+        td_cmd_keys = list(td_module_configs[td_module]["commands"].keys())
+        td_cmd = st.selectbox(
+            "Command",
+            options=td_cmd_keys,
+            key="td_cmd_sel",
+        )
+
+        # Build extra args input fields
+        td_args_list = []
+        cmd_config = td_module_configs[td_module]["commands"][td_cmd]
+        for arg_cfg in cmd_config["args"]:
+            ak = f"td_arg_{arg_cfg['key']}"
+            if arg_cfg.get("type") == "select":
+                val = st.selectbox(
+                    f"--{arg_cfg['key']}",
+                    options=arg_cfg["options"],
+                    index=arg_cfg["options"].index(arg_cfg["default"]),
+                    key=ak,
+                )
+                td_args_list.append(f"--{arg_cfg['key']} {val}")
+            elif arg_cfg.get("type") == "number":
+                val = st.number_input(
+                    f"--{arg_cfg['key']}",
+                    value=int(arg_cfg["default"]),
+                    key=ak,
+                )
+                td_args_list.append(f"--{arg_cfg['key']} {val}")
+            else:
+                val = st.text_input(
+                    arg_cfg["label"],
+                    value=arg_cfg["default"],
+                    key=ak,
+                )
+                td_args_list.append(val)
+
+        td_extra_args = " ".join(td_args_list)
+
+        # Preview command line
+        cmd_preview = f"tankdozer {td_module} {td_cmd} {td_extra_args}"
+        st.markdown(
+            f'<div style="font-family: Fira Code, monospace; font-size: 12px; '
+            f'color: #ff00ff; background: rgba(0,0,0,0.3); padding: 8px 12px; '
+            f'border-radius: 6px; border: 1px solid rgba(255,0,255,0.2); '
+            f'margin-top: 12px;">$ {cmd_preview}</div>',
+            unsafe_allow_html=True,
+        )
+
+        run_clicked = st.button(
+            "▶ EXECUTE COMMAND",
+            key="td_run",
+            help="Run the configured tankdozer command",
+        )
+
+    with td_col_b:
+        st.markdown(
+            '<p style="font-family: Orbitron, sans-serif; color: #00f0ff; '
+            'font-size: 14px; letter-spacing: 2px;">▸ TERMINAL OUTPUT</p>',
+            unsafe_allow_html=True,
+        )
+
+        if run_clicked or st.session_state.get("td_auto_run"):
+            if st.session_state.get("td_auto_run"):
+                td_module = st.session_state.td_module
+                td_cmd = st.session_state.td_cmd
+                td_extra_args = st.session_state.td_args
+                st.session_state.td_auto_run = False
+            else:
+                st.session_state.td_module = td_module
+                st.session_state.td_cmd = td_cmd
+                st.session_state.td_args = td_extra_args
+
+            with st.spinner("Executing command..."):
+                output = run_tankdozer(td_module, td_cmd, td_extra_args)
+                st.session_state.td_output = output
+                st.rerun()
+
+        # Terminal output display
+        output_text = st.session_state.get("td_output", "")
+        st.markdown(
+            f'<div class="terminal-box">'
+            f'<span style="color: #ff00ff;">┌─</span> '
+            f'<span style="color: #8888aa;">tankdozer terminal</span>'
+            f'<span style="color: #ff00ff;">─' + "─" * 40 + '</span><br>'
+            f'{output_text}'
+            f'<br><span style="color: #ff00ff;">└─</span> '
+            f'<span style="color: #8888aa;">exit</span></div>',
+            unsafe_allow_html=True,
+        )
+
+        if output_text:
+            if st.button("🗑 Clear Output", key="td_clear"):
+                st.session_state.td_output = ""
+                st.rerun()
+
+    # ── Quick Reference ─────────────────────────────────────
+    with st.expander("📖 Command Reference"):
+        st.markdown("""
+        | Module | Command | Description |
+        |--------|---------|-------------|
+        | `ir` | `init [name] --severity` | Start a new incident response case |
+        | `ir` | `status` | Show current case status |
+        | `ir` | `close` | Close the current case |
+        | `analyze` | `logs <file> --clusters` | Detect anomalies in log data |
+        | `analyze` | `network` | Analyze network flow patterns |
+        | `analyze` | `traffic` | Traffic pattern analysis |
+        | `scan` | `quick` | Quick port scan (top 100 ports) |
+        | `scan` | `full <target> --rate` | Full port scan (1-65535) |
+        | `scan` | `web` | Web application recon |
+        | `ioc` | `enrich <indicator> --type` | Enrich an IOC |
+        | `ioc` | `bulk` | Bulk IOC enrichment |
+        | `ioc` | `cluster <file>` | Cluster IOCs by similarity |
+        | `report` | `generate` | Full incident report |
+        | `report` | `executive` | Executive summary |
+        | `report` | `timeline` | Incident timeline |
+        """)
 
 
 # =====================================================================

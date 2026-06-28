@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ci-lib"
-version = "1.0.0"
+version = "1.1.0"
 description = "A pure-NumPy computational intelligence library for optimisation, learning, and decision-making"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Author Name", email = "author@example.com"},
+    {name = "William Majanja"},
 ]
 keywords = ["computational-intelligence", "neural-networks", "evolutionary-algorithms", "swarm-intelligence", "fuzzy-logic", "clustering", "optimization"]
 classifiers = [
@@ -65,9 +65,9 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/anomalyco/Partial-Realpart-Analysis--master"
-Documentation = "https://github.com/anomalyco/Partial-Realpart-Analysis--master"
-Repository = "https://github.com/anomalyco/Partial-Realpart-Analysis--master"
+Homepage = "https://github.com/WilliamMajanja/Partial-Realpart-Analysis-"
+Documentation = "https://github.com/WilliamMajanja/Partial-Realpart-Analysis-"
+Repository = "https://github.com/WilliamMajanja/Partial-Realpart-Analysis-"
 
 [project.scripts]
 tankdozer = "tankdozer.cli:cli"
